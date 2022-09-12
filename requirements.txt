@@ -1,5 +1,5 @@
 numpy
 matplotlib
 numba
-celluloid
 tqdm
+scipy
