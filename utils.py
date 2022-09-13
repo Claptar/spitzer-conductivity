@@ -66,6 +66,6 @@ def thomas_solver(a, b, c, d):
     # backward
     u_sol[-1] = Q[-1]
     for m in range(M - 1, -1, -1):
-        u_sol[m - 1] = abs(P[m - 1] * u_sol[m] + Q[m - 1])
-
+        sol = P[m - 1] * u_sol[m] + Q[m - 1]
+        u_sol[m - 1] = sol if sol > 0 else 0
     return u_sol
