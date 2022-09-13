@@ -1,10 +1,13 @@
 import numpy as np
+from numba import njit
 
 
+@njit
 def k_12(y_m, y_m_1, alpha):
     return (y_m ** alpha + y_m_1 ** alpha) / 2
 
 
+@njit
 def qei(Te, Ti):
     if Te <= 1e-5:
         return 0.0
@@ -12,6 +15,7 @@ def qei(Te, Ti):
         return (Te - Ti) / Te ** 2
 
 
+@njit
 def make_diagonals(u1, u2, n, tau, h, M, mode='electrons'):
     # init variables
     a = np.zeros(M - 1)
@@ -41,6 +45,7 @@ def make_diagonals(u1, u2, n, tau, h, M, mode='electrons'):
     return a, b, c, d
 
 
+@njit
 def thomas_solver(a, b, c, d):
     # init arrays
     M = len(b)
