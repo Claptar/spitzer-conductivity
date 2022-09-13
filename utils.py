@@ -4,7 +4,7 @@ from numba import njit
 
 @njit
 def k_12(y_m, y_m_1, alpha):
-    return (y_m ** alpha + y_m_1 ** alpha) / 2
+    return (abs(y_m) ** alpha + abs(y_m_1) ** alpha) / 2
 
 
 @njit
@@ -66,6 +66,6 @@ def thomas_solver(a, b, c, d):
     # backward
     u_sol[-1] = Q[-1]
     for m in range(M - 1, -1, -1):
-        sol = P[m - 1] * u_sol[m] + Q[m - 1]
-        u_sol[m - 1] = sol if sol > 0 else 0
+        u_sol[m - 1] = P[m - 1] * u_sol[m] + Q[m - 1]
+
     return u_sol
