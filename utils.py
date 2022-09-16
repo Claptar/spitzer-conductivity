@@ -1,10 +1,11 @@
 import numpy as np
 from numba import njit
+from numpy.linalg import inv
 
 
 @njit
 def k_12(y_m, y_m_1, alpha):
-    return (abs(y_m) ** alpha + abs(y_m_1) ** alpha) / 2
+    return (y_m ** alpha + y_m_1 ** alpha) / 2
 
 
 @njit
@@ -69,3 +70,29 @@ def thomas_solver(a, b, c, d):
         u_sol[m - 1] = P[m - 1] * u_sol[m] + Q[m - 1]
 
     return u_sol
+
+
+@njit
+def thomas_block_solver(A, B, C, D):
+    M = len(D)
+    u_sol = np.zeros_like(D)
+    P = np.zeros_like(B)
+    Q = np.zeros_like(D)
+    # Forward first coefs
+    P[0] = inv(B[0]) @ C[0]
+    Q[0] = - inv(B[0]) @ D[0]
+    # Forward coefs
+    for m in range(1, M - 1):
+        inv_denom = inv(B[m] - A[m - 1] @ P[m - 1])
+        P[m] = inv_denom @ C[m]
+        Q[m] = inv_denom @ (A[m - 1] @ Q[m - 1] - D[m])
+    #Forward last
+    m = M - 1
+    Q[m] = inv(B[m] - A[m - 1] @ P[m - 1]) @ (A[m - 1] @ Q[m - 1] - D[m])
+
+    u_sol[-1] = Q[-1]
+    for m in range(M - 1, -1, -1):
+        u_sol[m - 1] = P[m - 1] @ u_sol[m] + Q[m - 1]
+
+    return u_sol
+

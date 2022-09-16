@@ -4,3 +4,4 @@ numba
 tqdm
 scipy
 celluloid
+pandas
