@@ -6,8 +6,11 @@
 Задача Коши для уравнения двухкомпонентной теплороводности плазмы:
 
 $$
-\frac{\partial u_1}{\partial t} = \frac{\partial}{\partial x}\kappa_1 u_1^{\alpha_1}\frac{\partial u_1}{\partial x} - q_{ei}, \\
-\frac{\partial u_2}{\partial t} = \frac{\partial}{\partial x}\kappa_2 u_2^{\alpha_2}\frac{\partial u_2}{\partial x} + q_{ei}. \\
+\frac{\partial u_1}{\partial t} = \frac{\partial}{\partial x}\kappa_1 u_1^{\alpha_1}\frac{\partial u_1}{\partial x} - q_{ei},
+$$
+
+$$
+\frac{\partial u_2}{\partial t} = \frac{\partial}{\partial x}\kappa_2 u_2^{\alpha_2}\frac{\partial u_2}{\partial x} + q_{ei}.
 $$
 
 Начальные условия представляют равномерно прогретый слой плазмы фиксированной длинны:
