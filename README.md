@@ -208,6 +208,16 @@ for n in tqdm(range(N - 1)):
 
 ### Решение однородной задачи
 
+Проверим реализацию схемы на однородной постановке задачи:
+
+$$
+\frac{\partial u_1}{\partial t} = \frac{\partial}{\partial x}\kappa_1 u_1^{\alpha_1}\frac{\partial u_1}{\partial x},
+$$
+
+$$
+\frac{\partial u_2}{\partial t} = \frac{\partial}{\partial x}\kappa_2 u_2^{\alpha_2}\frac{\partial u_2}{\partial x}.
+$$
+
 Реализация метода Ньютона
 
 
@@ -302,6 +312,40 @@ for n in tqdm(range(N - 1)):
 <img alt="SegmentLocal" height="400" src="lab_gifs\spitz_no_f_block.gif" title="segment" width="600"/>
 
 ## Решение исходной задачи
+
+### Постановка
+
+Напомню постановку исходной задачи:
+Задача Коши для уравнения двухкомпонентной теплороводности плазмы:
+
+$$
+\frac{\partial u_1}{\partial t} = \frac{\partial}{\partial x}\kappa_1 u_1^{\alpha_1}\frac{\partial u_1}{\partial x} - q_{ei},
+$$
+
+$$
+\frac{\partial u_2}{\partial t} = \frac{\partial}{\partial x}\kappa_2 u_2^{\alpha_2}\frac{\partial u_2}{\partial x} + q_{ei}.
+$$
+
+Начальные условия представляют равномерно прогретый слой плазмы фиксированной длинны:
+
+$$
+u_1(x, 0) = u_2(x, 0) =
+\begin{cases}
+T_0, x \le 1,\\
+0, x > 1.
+\end{cases}
+$$
+
+Граничные условия представляют собой теплоизолированную стенку слева и ноль на бесконечности:
+
+$$
+\frac{\partial u_1}{\partial x} = \frac{\partial u_2}{\partial x} = 0, \\
+\lim_{x \rightarrow +\inf}u_1(x,t) = \lim_{x \rightarrow +\inf}u_2(x,t) = 0.
+$$
+
+Где $q_{ei} = \frac{u_1 - u_2}{u_1^2}$, $T_0 \ge 1$, $\kappa_1 = 0.2$, $\kappa_2 = 0.3$, $\alpha_1 = 2.5$, $\alpha_2 = 1.5$.
+
+### Численное решение
 
 Реализация метода Ньютона
 
