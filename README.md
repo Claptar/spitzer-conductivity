@@ -52,7 +52,7 @@ $$
 
 $$
 \begin{cases}
-\frac{u^{\alpha, n + 1}_{m} - u^{\alpha, n}_{m}}{\tau} = \frac{1}{h}\left[k_{m + 1/2}^{n + 1}\frac{u^{\alpha, n+1}_{m+1} - u^{\alpha, n+1}_{m}}{h} - k_{m - 1/2}^{n+1}\frac{u^{\alpha, n+1}_{m} - u^{\alpha, n+1}_{m - 1}}{h}\right] - \varphi_{{\alpha,}m}^{n + 1}, m=1..M - 2, n=1..N-1 \\
+\frac{u_{m}^{\alpha, n + 1} - u_{m}^{\alpha, n}}{\tau} = \frac{1}{h}\left[k_{m + 1/2}^{n + 1}\frac{u_{m+1}^{\alpha, n+1} - u_{m}^{\alpha, n+1}}{h} - k_{m - 1/2}^{n+1}\frac{u_{m}^{\alpha, n+1} - u_{m - 1}^{\alpha, n+1}}{h}\right] - \varphi_{{\alpha,}m}^{n + 1}, m=1..M - 2, n=1..N-1 \\
 \frac{u_0^{\alpha, n + 1} - u_0^{\alpha, n}}{\tau} = \frac{k_{1/2}^{n + 1}}{h^2}(u_1^{\alpha, n + 1} - u_0^{\alpha, n + 1}) - \varphi_{{\alpha,}0}^{n + 1}, n=1..N-1 \\
 u_{\alpha}(t^{n}, M) = 0, n=1..N-1 \\
 \begin{equation*}
@@ -69,11 +69,11 @@ $$
 Для реализации метода прогонки проведём линеаризацию:
 
 $$
-\delta \hat{u}^{\alpha}_{n+1}\left[k_{n + 1/2} + \frac{\partial k_{n + 1/2}}{\partial \hat{u}^{\alpha}_{n+1}}(\hat{u}^{\alpha}_{n+1} - \hat{u}^{\alpha}_{n})\right] - \delta \hat{u}^{\alpha}_{n}\left[\frac{h^2}{\tau} + k_{n + 1/2} + k_{n - 1/2} - \frac{\partial k_{n + 1/2}}{\partial \hat{u}^{\alpha}_{n}}(\hat{u}^{\alpha}_{n+1} - \hat{u}^{\alpha}_{n}) + \frac{\partial k_{n - 1/2}}{\partial \hat{u}^{\alpha}_{n}}(\hat{u}^{\alpha}_{n} - \hat{u}^{\alpha}_{n - 1}) - \sum_ih^2\frac{\partial \varphi^\alpha}{\partial \hat{u}^{i}_{n}}\right] +
+\delta \hat u_{n+1}^{\alpha}\left[k_{n + 1/2} + \frac{\partial k_{n + 1/2}}{\partial \hat u_{n+1}^{\alpha}}(\hat u_{n+1}^{\alpha} - \hat u_{n}^{\alpha})\right] - \delta \hat u_{n}^{\alpha}\left[\frac{h^2}{\tau} + k_{n + 1/2} + k_{n - 1/2} - \frac{\partial k_{n + 1/2}}{\partial \hat u_{n}^{\alpha}}(\hat u_{n+1}^{\alpha} - \hat u_{n}^{\alpha}) + \frac{\partial k_{n - 1/2}}{\partial \hat u_{n}^{\alpha}}(\hat u_{n}^{\alpha} - \hat u_{n - 1}^{\alpha}) - \sum_ih^2\frac{\partial \varphi^\alpha}{\partial \hat u_{n}^{i}}\right] +
 $$
 
 $$
-\+ \delta \hat{u}^{\alpha}_{n-1}\left[k_{n - 1/2} - \frac{\partial k_{n - 1/2}}{\partial \hat{u}^{\alpha}_{n-1}}(\hat{u}^{\alpha}_{n} - \hat{u}^{\alpha}_{n-1})\right] = \frac{h^2}{\tau}(\hat{u}^{\alpha}_{n} - u^{\alpha}_{n}) - k_{n + 1/2}(\hat{u}^{\alpha}_{n+1} - \hat{u}^{\alpha}_{n}) + k_{n - 1/2}(\hat{u}^{\alpha}_{n} - \hat{u}^{\alpha}_{n - 1}) - h^2\varphi^\alpha_n
+\+ \delta \hat u_{n-1}^{\alpha}\left[k_{n - 1/2} - \frac{\partial k_{n - 1/2}}{\partial \hat u_{n-1}^{\alpha}}(\hat u_{n}^{\alpha} - \hat u_{n-1}^{\alpha})\right] = \frac{h^2}{\tau}(\hat u_{n}^{\alpha} - u_{n}^{\alpha}) - k_{n + 1/2}(\hat u_{n+1}^{\alpha} - \hat u_{n}^{\alpha}) + k_{n - 1/2}(\hat u_{n}^{\alpha} - \hat u_{n - 1}^{\alpha}) - h^2\varphi^\alpha_n
 $$
 
 $$
