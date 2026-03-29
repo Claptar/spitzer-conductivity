@@ -1,9 +1,10 @@
-# Решение уравнения спитцеровской теплопроводности плазмы
+# Solving the Spitzer Plasma Heat-Conduction Equation
 
-В данной работе автор ставит задачу численного решения уравнения спитцеровской теплопроводности плазмы. Для этого реализуется чисто неявная схема с нелинейностью на верхнем слое. Схема проверяется на решении модельной задачи Соболя-Самарского-Зельдовича, а так же на неоднородной постановке исходной задачи. Реализацию всех алгоритмов можно найти в [github-репозитории](https://github.com/Claptar/spitzer-conductivity.git).
+In this work, the author addresses the numerical solution of the Spitzer plasma heat-conduction equation. For this purpose, a fully implicit scheme with nonlinearity evaluated at the upper time layer is implemented. The scheme is tested on the model problem of Sobol–Samarskii–Zeldovich, as well as on the nonhomogeneous formulation of the original problem. The implementation of all algorithms can be found in the [GitHub repository](https://github.com/Claptar/spitzer-conductivity.git).
 
-## Постановка задачи
-Задача Коши для уравнения двухкомпонентной теплороводности плазмы:
+## Problem statement
+
+The Cauchy problem for the two-component plasma heat-conduction equation is given by:
 
 $$
 \frac{\partial u_1}{\partial t} = \frac{\partial}{\partial x}\kappa_1 u_1^{\alpha_1}\frac{\partial u_1}{\partial x} - q_{ei},
@@ -13,28 +14,28 @@ $$
 \frac{\partial u_2}{\partial t} = \frac{\partial}{\partial x}\kappa_2 u_2^{\alpha_2}\frac{\partial u_2}{\partial x} + q_{ei}.
 $$
 
-Начальные условия представляют равномерно прогретый слой плазмы фиксированной длинны:
+The initial conditions represent a uniformly heated plasma layer of fixed length:
 
 $$
 u_1(x, 0) = u_2(x, 0) =
 \begin{cases}
-T_0, x \le 1,\\
+T_0, x \le 1,\
 0, x > 1.
 \end{cases}
 $$
 
-Граничные условия представляют собой теплоизолированную стенку слева и ноль на бесконечности:
+The boundary conditions correspond to a thermally insulated wall on the left and zero at infinity:
 
 $$
-\frac{\partial u_1}{\partial x} = \frac{\partial u_2}{\partial x} = 0, \\
+\frac{\partial u_1}{\partial x} = \frac{\partial u_2}{\partial x} = 0, \
 \lim_{x \rightarrow +\inf}u_1(x,t) = \lim_{x \rightarrow +\inf}u_2(x,t) = 0.
 $$
 
-Где $q_{ei} = \frac{u_1 - u_2}{u_1^2}$, $T_0 \ge 1$, $\kappa_1 = 0.2$, $\kappa_2 = 0.3$, $\alpha_1 = 2.5$, $\alpha_2 = 1.5$.
+Where $q_{ei} = \frac{u_1 - u_2}{u_1^2}$, $T_0 \ge 1$, $\kappa_1 = 0.2$, $\kappa_2 = 0.3$, $\alpha_1 = 2.5$, and $\alpha_2 = 1.5$.
 
-## Выбор схемы
+## Choice of scheme
 
-Как известно производная решения $u(x, t)$ квазилинейного уравнения теплопроводности с $\alpha > 1$ на фронте обращается в бесконечность. Соответсвенно при расчёте по не монотонным схемам легко возникает разболтка. Поэтому для решения подобных задач удобно использовать чисто неявные схемы, которые **монотонны** и **устойчивы** при любых шагах. Будем использовать схему с нелинейностью сверху:
+As is well known, the derivative of the solution $u(x, t)$ of a quasilinear heat-conduction equation with $\alpha > 1$ becomes infinite at the front. Accordingly, when using non-monotone schemes, numerical oscillations can easily arise. Therefore, for solving such problems it is convenient to use fully implicit schemes, which are **monotone** and **stable** for any time step. We will use a scheme with nonlinearity evaluated at the upper layer:
 
 $$
 \frac{y_{m}^{n+1} - y_{m}^{n}}{\tau} = \frac{1}{h}\left[k_{m + 1/2}^{n + 1}\frac{y_{m+1}^{n+1} - y_{m}^{n+1}}{h} - k_{m - 1/2}^{n+1}\frac{y_{m}^{n+1} - y_{m - 1}^{n+1}}{h}\right] + f_m^{n + 1}
@@ -44,71 +45,67 @@ $$
 k_{m + 1/2}^{n + 1} = \kappa\frac{(u_{m}^{n + 1})^{\alpha} - (u_{m + 1}^{n + 1})^{\alpha}}{2}
 $$
 
-Схема имеет первый порядок апроксимации по времени $O(\tau)$ и второй порядок апроксимации по пространству $O(h^2)$. Так же схема является монотонной про Фридрихсу.
+The scheme has first-order accuracy in time, $O(\tau)$, and second-order accuracy in space, $O(h^2)$. The scheme is also monotone in the sense of Friedrichs.
 
-### Реализация схемы
+### Scheme implementation
 
-Запишем разностную задачу:
+Let us write the finite-difference problem:
 
 $$
 \begin{cases}
-\frac{u_{m}^{\alpha, n + 1} - u_{m}^{\alpha, n}}{\tau} = \frac{1}{h}\left[k_{m + 1/2}^{n + 1}\frac{u_{m+1}^{\alpha, n+1} - u_{m}^{\alpha, n+1}}{h} - k_{m - 1/2}^{n+1}\frac{u_{m}^{\alpha, n+1} - u_{m - 1}^{\alpha, n+1}}{h}\right] - \varphi_{{\alpha,}m}^{n + 1}, m=1..M - 2, n=1..N-1 \\
-\frac{u_0^{\alpha, n + 1} - u_0^{\alpha, n}}{\tau} = \frac{k_{1/2}^{n + 1}}{h^2}(u_1^{\alpha, n + 1} - u_0^{\alpha, n + 1}) - \varphi_{{\alpha,}0}^{n + 1}, n=1..N-1 \\
-u_{\alpha}(t^{n}, M) = 0, n=1..N-1 \\
+\frac{u_{m}^{\alpha, n + 1} - u_{m}^{\alpha, n}}{\tau} = \frac{1}{h}\left[k_{m + 1/2}^{n + 1}\frac{u_{m+1}^{\alpha, n+1} - u_{m}^{\alpha, n+1}}{h} - k_{m - 1/2}^{n+1}\frac{u_{m}^{\alpha, n+1} - u_{m - 1}^{\alpha, n+1}}{h}\right] - \varphi_{{\alpha,}m}^{n + 1}, m=1..M - 2, n=1..N-1 \
+\frac{u_0^{\alpha, n + 1} - u_0^{\alpha, n}}{\tau} = \frac{k_{1/2}^{n + 1}}{h^2}(u_1^{\alpha, n + 1} - u_0^{\alpha, n + 1}) - \varphi_{{\alpha,}0}^{n + 1}, n=1..N-1 \
+u_{\alpha}(t^{n}, M) = 0, n=1..N-1 \
 \begin{equation*}
 u_{\alpha}(x_m, 0) =
 \begin{cases}
-T_0, x \le 1,\\
+T_0, x \le 1,\
 0, x_m > 1.
 \end{cases}
 \end{equation*}
 \end{cases}
 $$
 
-
-Для реализации метода прогонки проведём линеаризацию:
+To implement the Thomas algorithm, we linearize the system:
 
 $$
 \delta \hat u_{n+1}^{\alpha}\left[k_{n + 1/2} + \frac{\partial k_{n + 1/2}}{\partial \hat u_{n+1}^{\alpha}}(\hat u_{n+1}^{\alpha} - \hat u_{n}^{\alpha})\right] - \delta \hat u_{n}^{\alpha}\left[\frac{h^2}{\tau} + k_{n + 1/2} + k_{n - 1/2} - \frac{\partial k_{n + 1/2}}{\partial \hat u_{n}^{\alpha}}(\hat u_{n+1}^{\alpha} - \hat u_{n}^{\alpha}) + \frac{\partial k_{n - 1/2}}{\partial \hat u_{n}^{\alpha}}(\hat u_{n}^{\alpha} - \hat u_{n - 1}^{\alpha}) - \sum_ih^2\frac{\partial \varphi^\alpha}{\partial \hat u_{n}^{i}}\right] +
 $$
 
 $$
-\+ \delta \hat u_{n-1}^{\alpha}\left[k_{n - 1/2} - \frac{\partial k_{n - 1/2}}{\partial \hat u_{n-1}^{\alpha}}(\hat u_{n}^{\alpha} - \hat u_{n-1}^{\alpha})\right] = \frac{h^2}{\tau}(\hat u_{n}^{\alpha} - u_{n}^{\alpha}) - k_{n + 1/2}(\hat u_{n+1}^{\alpha} - \hat u_{n}^{\alpha}) + k_{n - 1/2}(\hat u_{n}^{\alpha} - \hat u_{n - 1}^{\alpha}) - h^2\varphi^\alpha_n
++ \delta \hat u_{n-1}^{\alpha}\left[k_{n - 1/2} - \frac{\partial k_{n - 1/2}}{\partial \hat u_{n-1}^{\alpha}}(\hat u_{n}^{\alpha} - \hat u_{n-1}^{\alpha})\right] = \frac{h^2}{\tau}(\hat u_{n}^{\alpha} - u_{n}^{\alpha}) - k_{n + 1/2}(\hat u_{n+1}^{\alpha} - \hat u_{n}^{\alpha}) + k_{n - 1/2}(\hat u_{n}^{\alpha} - \hat u_{n - 1}^{\alpha}) - h^2\varphi^\alpha_n
 $$
 
 $$
 \hat{u}_n^{\alpha, (s + 1)} = \hat{u}_n^{\alpha, (s)} + \delta\hat{u}_n^{\alpha, (s)}
 $$
 
-## Проверка схемы
+## Scheme verification
 
-### Решение задачи Соболя-Самарского-Зельдовича
+### Solving the Sobol–Samarskii–Zeldovich problem
 
-Будем проверять схему на модельной задаче Соболя-Самарского-Зельдовича:
+We will test the scheme on the model Sobol–Samarskii–Zeldovich problem:
 
 $$
 \begin{cases}
-\frac{\partial u}{\partial t} = \frac{\partial}{\partial x}\kappa u^{\alpha}\frac{\partial u}{\partial x} \\
-u(x, 0) = 0 \\
-u(0, t) = ct^{1/\alpha} \\
+\frac{\partial u}{\partial t} = \frac{\partial}{\partial x}\kappa u^{\alpha}\frac{\partial u}{\partial x} \
+u(x, 0) = 0 \
+u(0, t) = ct^{1/\alpha} \
 \lim_{x \rightarrow +\inf}u(x,t) = 0
 \end{cases}
 $$
 
-Для задачи известо аналитическое решение:
+For this problem, the analytical solution is known:
 
 $$
 \begin{equation*}
 u =
 \begin{cases}
-\left(\frac{\alpha v}{\kappa}(vt - x)\right)^{(1/\alpha)}, \text{ } x - vt \le 0\\
+\left(\frac{\alpha v}{\kappa}(vt - x)\right)^{(1/\alpha)}, \text{ } x - vt \le 0\
 0, \text{ } x - vt > 0.
 \end{cases}
 \end{equation*}
 $$
-
-
-
 
 ```python
 import numpy as np
@@ -121,8 +118,7 @@ from matplotlib.pyplot import axes
 from celluloid import Camera
 ```
 
-Реализация метода Ньютона
-
+Implementation of Newton's method:
 
 ```python
 @njit
@@ -136,8 +132,7 @@ def newton_solver(y, y_left, tau, h, alpha=2.5, kappa=0.2, iter=10):
     return y_s
 ```
 
-Зададим параметры и начальные значения
-
+Set the parameters and initial values:
 
 ```python
 a = 0
@@ -149,48 +144,46 @@ c = 3
 alpha = 2.5
 kappa = 0.2
 
-print(f'>>> Скорость волны v = {np.sqrt(c ** (1 / alpha) * kappa / alpha): .4f}')
+print(f'>>> Wave speed v = {np.sqrt(c ** (1 / alpha) * kappa / alpha): .4f}')
 ```
 
-    >>> Скорость волны v =  0.3523
-    
+```
+>>> Wave speed v =  0.3523
+```
 
-Зададим параметры сетки
-
+Set the grid parameters:
 
 ```python
-# Число узлов
+# Number of nodes
 N = 6000
 M = 100
 
-# Размер шага сетки
+# Grid step sizes
 h = (b - a) / (M - 1)
 tau = (T - t_0) / (N - 1)
 
 print(f'>>> {h=: .8f}, {tau=: .8f}')
-print(f'>>> Гиперболический аналог числа куранта sigma ={kappa * tau / h ** 2 * 0.5: .4f}')
+print(f'>>> Hyperbolic analogue of the Courant number sigma ={kappa * tau / h ** 2 * 0.5: .4f}')
 ```
 
-    >>> h= 0.03030303, tau= 0.00033339
-    >>> Гиперболический аналог числа куранта sigma = 0.0363
-    
-
+```
+>>> h= 0.03030303, tau= 0.00033339
+>>> Hyperbolic analogue of the Courant number sigma = 0.0363
+```
 
 ```python
 t = np.linspace(t_0, T, N)
 x = np.linspace(a, b, M)
 ```
 
-Инициализируем сетку, начальные и граничные условия
-
+Initialize the grid, initial conditions, and boundary conditions:
 
 ```python
 u = np.zeros((N, M), dtype=np.double)
 u[:, 0] = c * t ** (1 / alpha)
 ```
 
-При решении системы уравнений будем делать 10 итераций метода Ньютона
-
+When solving the system of equations, we will perform 10 Newton iterations:
 
 ```python
 for n in tqdm(range(N - 1)):
@@ -198,17 +191,13 @@ for n in tqdm(range(N - 1)):
     u[n + 1, 1:] = u_sol[1:]
 ```
 
-
-      0%|          | 0/5999 [00:00<?, ?it/s]
-
-
-Аналитическое решение изображено зелёным, численное -- красным. Как можно видеть, волновой фронт численного решения несколько отстаёт от аналитического.
+The analytical solution is shown in green, and the numerical solution in red. As can be seen, the wave front of the numerical solution lags slightly behind the analytical one.
 
 <img alt="SegmentLocal" height="400" src="lab_gifs\zeldovich_true.gif" title="segment" width="600"/>
 
-### Решение однородной задачи
+### Solving the homogeneous problem
 
-Проверим реализацию схемы на однородной постановке задачи:
+Let us test the implementation of the scheme on the homogeneous formulation of the problem:
 
 $$
 \frac{\partial u_1}{\partial t} = \frac{\partial}{\partial x}\kappa_1 u_1^{\alpha_1}\frac{\partial u_1}{\partial x},
@@ -218,8 +207,7 @@ $$
 \frac{\partial u_2}{\partial t} = \frac{\partial}{\partial x}\kappa_2 u_2^{\alpha_2}\frac{\partial u_2}{\partial x}.
 $$
 
-Реализация метода Ньютона
-
+Implementation of Newton's method:
 
 ```python
 def newton_solver(u1, u2, tau, h, alpha=(2.5, 1.5), kappa=(0.2, 0.3), iter=10):
@@ -232,11 +220,10 @@ def newton_solver(u1, u2, tau, h, alpha=(2.5, 1.5), kappa=(0.2, 0.3), iter=10):
     return u1_s, u2_s
 ```
 
-Зададим параметры и начальные значения
-
+Set the parameters and initial values:
 
 ```python
-# Начальные значения
+# Initial values
 a = 0
 b = 3
 t_0 = 0
@@ -246,36 +233,34 @@ alpha = [2.5, 1.5]
 kappa = [0.2, 0.3]
 ```
 
-Зададим параметры сетки
-
+Set the grid parameters:
 
 ```python
-# Число узлов
+# Number of nodes
 N = 6000
 M = 100
 
-# Размер шага сетки
+# Grid step sizes
 h = (b - a) / (M - 1)
 tau = (T - t_0) / (N - 1)
 
 print(f'>>> {h=: .8f}, {tau=: .8f}')
-print(f'>>> Гиперболический аналог числа куранта: \n sigma_1 ={kappa[0] * tau / h ** 2 * 0.5: .4f} \n sigma_2 ={kappa[1] * tau / h ** 2 * 0.5: .4f}')
+print(f'>>> Hyperbolic analogue of the Courant number: \n sigma_1 ={kappa[0] * tau / h ** 2 * 0.5: .4f} \n sigma_2 ={kappa[1] * tau / h ** 2 * 0.5: .4f}')
 ```
 
-    >>> h= 0.03030303, tau= 0.00066678
-    >>> Гиперболический аналог числа куранта: 
-     sigma_1 = 0.0726 
-     sigma_2 = 0.1089
-    
-
+```
+>>> h= 0.03030303, tau= 0.00066678
+>>> Hyperbolic analogue of the Courant number: 
+ sigma_1 = 0.0726 
+ sigma_2 = 0.1089
+```
 
 ```python
 t = np.linspace(t_0, T, N)
 x = np.linspace(a, b, M)
 ```
 
-Инициализируем сетку, начальные и граничные условия
-
+Initialize the grid, initial conditions, and boundary conditions:
 
 ```python
 def u_init(x, To):
@@ -286,7 +271,6 @@ def u_init(x, To):
     return u
 ```
 
-
 ```python
 u1 = np.zeros((N, M), dtype=np.double)
 u1[0, :] = u_init(x, 2)
@@ -294,8 +278,7 @@ u2 = np.zeros((N, M), dtype=np.double)
 u2[0, :] = u_init(x, 2)
 ```
 
-При решении системы уравнений будем делать 10 итераций метода Ньютона
-
+When solving the system of equations, we will perform 10 Newton iterations:
 
 ```python
 for n in tqdm(range(N - 1)):
@@ -303,20 +286,17 @@ for n in tqdm(range(N - 1)):
     u1[n + 1, :], u2[n + 1, :] = u1_sol, u2_sol
 ```
 
-
-      0%|          | 0/5999 [00:00<?, ?it/s]
-
-
-Синим обозначена электронная температура $T_e$, красным обозначена ионная температура. Можно заметить, что ионная волна двигается быстрее (что в целом соотносится с тем, что её коэффициент теплопроводности $\kappa$ больше).
+The electron temperature $T_e$ is shown in blue, and the ion temperature in red. It can be seen that the ion wave moves faster, which is generally consistent with its larger heat-conductivity coefficient $\kappa$.
 
 <img alt="SegmentLocal" height="400" src="lab_gifs\spitz_no_f_block.gif" title="segment" width="600"/>
 
-## Решение исходной задачи
+## Solving the original problem
 
-### Постановка
+### Formulation
 
-Напомню постановку исходной задачи:
-Задача Коши для уравнения двухкомпонентной теплороводности плазмы:
+Let us recall the formulation of the original problem.
+
+The Cauchy problem for the two-component plasma heat-conduction equation is:
 
 $$
 \frac{\partial u_1}{\partial t} = \frac{\partial}{\partial x}\kappa_1 u_1^{\alpha_1}\frac{\partial u_1}{\partial x} - q_{ei},
@@ -326,29 +306,28 @@ $$
 \frac{\partial u_2}{\partial t} = \frac{\partial}{\partial x}\kappa_2 u_2^{\alpha_2}\frac{\partial u_2}{\partial x} + q_{ei}.
 $$
 
-Начальные условия представляют равномерно прогретый слой плазмы фиксированной длинны:
+The initial conditions represent a uniformly heated plasma layer of fixed length:
 
 $$
 u_1(x, 0) = u_2(x, 0) =
 \begin{cases}
-T_0, x \le 1,\\
+T_0, x \le 1,\
 0, x > 1.
 \end{cases}
 $$
 
-Граничные условия представляют собой теплоизолированную стенку слева и ноль на бесконечности:
+The boundary conditions correspond to a thermally insulated wall on the left and zero at infinity:
 
 $$
-\frac{\partial u_1}{\partial x} = \frac{\partial u_2}{\partial x} = 0, \\
+\frac{\partial u_1}{\partial x} = \frac{\partial u_2}{\partial x} = 0, \
 \lim_{x \rightarrow +\inf}u_1(x,t) = \lim_{x \rightarrow +\inf}u_2(x,t) = 0.
 $$
 
-Где $q_{ei} = \frac{u_1 - u_2}{u_1^2}$, $T_0 \ge 1$, $\kappa_1 = 0.2$, $\kappa_2 = 0.3$, $\alpha_1 = 2.5$, $\alpha_2 = 1.5$.
+Where $q_{ei} = \frac{u_1 - u_2}{u_1^2}$, $T_0 \ge 1$, $\kappa_1 = 0.2$, $\kappa_2 = 0.3$, $\alpha_1 = 2.5$, and $\alpha_2 = 1.5$.
 
-### Численное решение
+### Numerical solution
 
-Реализация метода Ньютона
-
+Implementation of Newton's method:
 
 ```python
 def newton_solver(u1, u2, tau, h, alpha=(2.5, 1.5), kappa=(0.2, 0.3), iter=10):
@@ -361,11 +340,10 @@ def newton_solver(u1, u2, tau, h, alpha=(2.5, 1.5), kappa=(0.2, 0.3), iter=10):
     return u1_s, u2_s
 ```
 
-Зададим параметры и начальные значения
-
+Set the parameters and initial values:
 
 ```python
-# Начальные значения
+# Initial values
 a = 0
 b = 3
 t_0 = 0
@@ -375,36 +353,34 @@ alpha = [2.5, 1.5]
 kappa = [0.2, 0.3]
 ```
 
-Зададим параметры сетки
-
+Set the grid parameters:
 
 ```python
-# Число узлов
+# Number of nodes
 N = 6000
 M = 100
 
-# Размер шага сетки
+# Grid step sizes
 h = (b - a) / (M - 1)
 tau = (T - t_0) / (N - 1)
 
 print(f'>>> {h=: .8f}, {tau=: .8f}')
-print(f'>>> Гиперболический аналог числа куранта: \n sigma_1 ={kappa[0] * tau / h ** 2 * 0.5: .4f} \n sigma_2 ={kappa[1] * tau / h ** 2 * 0.5: .4f}')
+print(f'>>> Hyperbolic analogue of the Courant number: \n sigma_1 ={kappa[0] * tau / h ** 2 * 0.5: .4f} \n sigma_2 ={kappa[1] * tau / h ** 2 * 0.5: .4f}')
 ```
 
-    >>> h= 0.03030303, tau= 0.00066678
-    >>> Гиперболический аналог числа куранта: 
-     sigma_1 = 0.0726 
-     sigma_2 = 0.1089
-    
-
+```
+>>> h= 0.03030303, tau= 0.00066678
+>>> Hyperbolic analogue of the Courant number: 
+ sigma_1 = 0.0726 
+ sigma_2 = 0.1089
+```
 
 ```python
 t = np.linspace(t_0, T, N)
 x = np.linspace(a, b, M)
 ```
 
-Инициализируем сетку, начальные и граничные условия
-
+Initialize the grid, initial conditions, and boundary conditions:
 
 ```python
 def u_init(x, To):
@@ -415,7 +391,6 @@ def u_init(x, To):
     return u
 ```
 
-
 ```python
 u1 = np.zeros((N, M), dtype=np.double)
 u1[0, :] = u_init(x, 2)
@@ -423,20 +398,15 @@ u2 = np.zeros((N, M), dtype=np.double)
 u2[0, :] = u_init(x, 2)
 ```
 
-
 ```python
 np.seterr(divide='raise', invalid='raise')
 ```
 
+```python
+{'divide': 'warn', 'over': 'warn', 'under': 'ignore', 'invalid': 'warn'}
+```
 
-
-
-    {'divide': 'warn', 'over': 'warn', 'under': 'ignore', 'invalid': 'warn'}
-
-
-
-При решении системы уравнений будем делать 2 итераций метода Ньютона
-
+When solving the system of equations, we will perform 2 Newton iterations:
 
 ```python
 for n in tqdm(range(N - 1)):
@@ -444,10 +414,8 @@ for n in tqdm(range(N - 1)):
     u1[n + 1, :], u2[n + 1, :] = u1_sol, u2_sol
 ```
 
-
-      0%|          | 0/5999 [00:00<?, ?it/s]
-
-
-Синим обозначена электронная температура $T_e$, красным обозначена ионная температура $T_i$. В отличии от однородного случая без теплообмена обе волны движутся с примерно одинаковой скоростью.
+The electron temperature $T_e$ is shown in blue, and the ion temperature $T_i$ is shown in red. Unlike the homogeneous case without heat exchange, both waves propagate at approximately the same speed.
 
 <img alt="SegmentLocal" height="400" src="lab_gifs\spitz_with_f.gif" title="segment" width="600"/>
+
+If you want, I can also turn this into a polished GitHub-ready `README.md` with smoother English and cleaner technical phrasing.
